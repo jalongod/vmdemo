@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>双向绑定简单示例</title>
+</head>
+<body>
+<div id="app">
+    <input type="text" id="txtInput" oninput="onInputChange()">
+    <p id="txtShow"></p>
+    <input type="button" value="clear" id="btnClear" onclick="onClickClear()">
+</div>
+<script type="module" src="index.js"></script>
+<script type="module" src="bind.js"></script>
+<script>
+
+    var obj = {}
+    Object.defineProperty(obj,"txt",{
+        get:function() {
+            return obj;
+        },
+        set:function(val){
+            document.getElementById("txtInput").value = val;
+            document.getElementById("txtShow").innerHTML = val;
+        }
+    })
+    function onInputChange(){
+        console.log('onInputChange');
+        obj.txt = document.getElementById("txtInput").value
+    };
+    function onClickClear(e) {
+        obj.txt = ""
+    }
+
+</script>
+</body>
+</html>

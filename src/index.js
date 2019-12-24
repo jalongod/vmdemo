@@ -1,3 +1,6 @@
+import com from "./com";
+import domStrToJsonObject from "./domp";
+
 let vKey = 0;
 
 //虚拟dom节点的数据结构
@@ -9,9 +12,7 @@ function vNode(type,props,...children) {
             ...props,
             "v-key":++vKey
         },
-        children:{
-            ...children
-        }
+        children:children
     }
 }
 
@@ -19,12 +20,15 @@ function vNode(type,props,...children) {
 function toRealDom(vNode) {
     let dom = document.createElement(vNode.type);
     for (let i in vNode.props) {
+        if (i === "v-text"){
+            dom.innerHTML = vNode.props[i];
+            continue;
+        }
         dom.setAttribute(i,vNode.props[i])
     }
     for (let i in vNode.children) {
         dom.appendChild(toRealDom(vNode.children[i]))
     }
-
     vNode.dom=dom;
     return dom;
 }
@@ -33,7 +37,7 @@ function toRealDom(vNode) {
 function mount(parent,vNode){
     return parent.appendChild(toRealDom(vNode))
 }
-
-var vRoot = vNode("div",{"id":"root-div-id","class":"root-class","v-text":""})
+let vnode = domStrToJsonObject(com.src);
+console.log(vnode)
 const app = document.getElementById('app');
-mount(app,vRoot,null)
+mount(app,vnode)
