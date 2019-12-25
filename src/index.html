@@ -9,8 +9,9 @@
     <p id="txtShow"></p>
     <input type="button" value="clear" id="btnClear" onclick="onClickClear()">
 </div>
-<script type="module" src="index.js"></script>
-<script type="module" src="bind.js"></script>
+<!--<script type="module" src="index.js"></script>-->
+<!--<script type="module" src="bind.js"></script>-->
+<script type="module" src="wue.js"></script>
 <script>
 
     var obj = {}
@@ -26,7 +27,7 @@
     function onInputChange(){
         console.log('onInputChange');
         obj.txt = document.getElementById("txtInput").value
-    };
+    }
     function onClickClear(e) {
         obj.txt = ""
     }
