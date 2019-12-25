@@ -9,6 +9,46 @@ class Wue {
         this.parentDom = document.getElementById(parentNodeId);
         this.parentDom.appendChild(this.dom);
     }
+    addDomListener(vDom){
+        if (vDom.type === "input"){
+            vDom.dom.addEventListener("input",(e)=>{
+                let vkey = vDom.props["v-model"];
+                if (vkey){
+                    this.data[vkey] = e.target.value;
+                }
+            })
+        }
+    }
+    addListener(key,dom,cb){
+        let that = this;
+        if (!that.data["_"+key])
+            that.data["_"+key]="";
+        if (!that.data["key_listeners"])
+            that.data["key_listeners"]=[]
+        that.data["key_listeners"].push(cb);
+        Object.defineProperty(that.data,key,{
+            get:function() {
+                return that.data["_"+key];
+            },
+            set:function(val){
+                if (that.data["_" + key]!==val){
+                    that.data["_" + key]=val;
+                    that.data[key]=val;
+                    setTimeout(()=>{
+                        for (let i in that.data["key_listeners"]){
+                            that.data["key_listeners"][i](dom,val);
+                        }
+                        // debugger
+                        // if (key==="inner"){
+                        //     dom.innerHTML = val;
+                        // }else {
+                        //     dom.setAttribute("value",val);
+                        // }
+                    },0);
+                }
+            }
+        })
+    }
     //根据虚拟dom生成真实dom
     toRealDom(vDom) {
         let dom = document.createElement(vDom.type);
@@ -16,9 +56,18 @@ class Wue {
             if (i === "v-model"){
                 let objstr = vDom.props[i]
                 dom.setAttribute("value",this.data[objstr]);
+                this.addListener(objstr,dom,(dom1,val)=>{
+                    debugger
+                    dom.setAttribute("value",val);
+                });
                 continue;
             }
-            dom.setAttribute(i,vDom.props[i])
+            if (i==="vclick"){
+                let handler = this.methods[vDom.props["vclick"]].bind(this.data);
+                dom.addEventListener("click", handler);
+                continue
+            }
+            dom.setAttribute(i,vDom.props[i],)
         }
         if (vDom.hasOwnProperty("innerValue")){
             dom.innerHTML = vDom["innerValue"];
@@ -26,11 +75,16 @@ class Wue {
         if (vDom.hasOwnProperty("innerObj")){
             let objstr = vDom["innerObj"]
             dom.innerHTML = this.data[objstr];
+            this.addListener(objstr,dom,(dom1,val)=>{
+                dom.innerHTML = val;
+            });
         }
+
         for (let i in vDom.children) {
             dom.appendChild(this.toRealDom(vDom.children[i]))
         }
         vDom.dom=dom;
+        this.addDomListener(vDom);
         return dom;
     }
 
