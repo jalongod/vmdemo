@@ -1,4 +1,4 @@
-
+//我是vue的分身
 class Wue {
     constructor(parentNodeId,com) {
         this.data = com.data();
@@ -9,6 +9,7 @@ class Wue {
         this.parentDom = document.getElementById(parentNodeId);
         this.parentDom.appendChild(this.dom);
     }
+    //监听dom的交互事件
     addDomListener(vDom){
         if (vDom.type === "input"){
             vDom.dom.addEventListener("input",(e)=>{
@@ -19,6 +20,7 @@ class Wue {
             })
         }
     }
+    //监听data变化
     addListener(key,dom,cb){
         let that = this;
         if (!that.data["_"+key])
@@ -38,12 +40,6 @@ class Wue {
                         for (let i in that.data["key_listeners"]){
                             that.data["key_listeners"][i](dom,val);
                         }
-                        // debugger
-                        // if (key==="inner"){
-                        //     dom.innerHTML = val;
-                        // }else {
-                        //     dom.setAttribute("value",val);
-                        // }
                     },0);
                 }
             }
@@ -57,8 +53,8 @@ class Wue {
                 let objstr = vDom.props[i]
                 dom.setAttribute("value",this.data[objstr]);
                 this.addListener(objstr,dom,(dom1,val)=>{
-                    debugger
-                    dom.setAttribute("value",val);
+                    // dom.setAttribute("value",val);
+                    dom.value = val;
                 });
                 continue;
             }
@@ -88,14 +84,12 @@ class Wue {
         return dom;
     }
 
-
     //将数据转成json格式
     domStrToVDom(str){
         if (!str) return "";
         let xmlDoc=(new DOMParser()).parseFromString(str,"application/xml");
         return this._domObjToVDom(xmlDoc.documentElement);
     }
-
     _domObjToVDom(dom){
         if (!dom)return null;
         let obj = {}
