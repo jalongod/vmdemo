@@ -1,4 +1,6 @@
-//我是vue的分身
+/**
+ * wue核心类
+ */
 class Wue {
     constructor(parentNodeId,com) {
         this.data = com.data();
@@ -9,7 +11,12 @@ class Wue {
         this.parentDom = document.getElementById(parentNodeId);
         this.parentDom.appendChild(this.dom);
     }
-    //监听dom的交互事件
+
+    /**
+     * 监听dom的交互事件
+     * 例如input控件的input事件
+     * @param vDom
+     */
     addDomListener(vDom){
         if (vDom.type === "input"){
             vDom.dom.addEventListener("input",(e)=>{
@@ -20,8 +27,15 @@ class Wue {
             })
         }
     }
-    //监听data变化
-    addListener(key,dom,cb){
+
+    /**
+     * 监听data变化
+     * v-model
+     * @param key
+     * @param dom
+     * @param cb
+     */
+    addDataListener(key,dom,cb){
         let that = this;
         if (!that.data["_"+key])
             that.data["_"+key]="";
@@ -52,7 +66,7 @@ class Wue {
             if (i === "v-model"){
                 let objstr = vDom.props[i]
                 dom.setAttribute("value",this.data[objstr]);
-                this.addListener(objstr,dom,(dom1,val)=>{
+                this.addDataListener(objstr,dom,(dom1,val)=>{
                     // dom.setAttribute("value",val);
                     dom.value = val;
                 });
@@ -71,7 +85,7 @@ class Wue {
         if (vDom.hasOwnProperty("innerObj")){
             let objstr = vDom["innerObj"]
             dom.innerHTML = this.data[objstr];
-            this.addListener(objstr,dom,(dom1,val)=>{
+            this.addDataListener(objstr,dom,(dom1,val)=>{
                 dom.innerHTML = val;
             });
         }
