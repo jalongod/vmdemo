@@ -19,7 +19,6 @@ export default {
 
         },
         onClickClear(){
-            debugger
             this.ivalue = "";
         },
         onClickShow(){
