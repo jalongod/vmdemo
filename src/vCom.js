@@ -2,11 +2,12 @@
 
 class VCom {
     constructor(com) {
-        // this = com.data();
+        this.$ref = {}
         this.initData(com.data());
         this.initMethods(com.methods);
         this.vDom = this.domStrToVDom(com.nsrc);
         this.dom = this.toRealDom(this.vDom);
+
     }
     /**
      * 监听dom的交互事件
@@ -83,9 +84,13 @@ class VCom {
                 });
                 continue;
             }
-            if (i==="vclick"){
-                let handler = this[vDom.props["vclick"]].bind(this);
+            if (i ==="vclick"){
+                let handler = this[vDom.props[i]].bind(this);
                 dom.addEventListener("click", handler);
+                continue
+            }
+            if (i === "ref"){
+                this.$ref[vDom.props[i]] = dom;
                 continue
             }
             dom.setAttribute(i,vDom.props[i],)
