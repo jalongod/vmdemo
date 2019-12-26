@@ -1,9 +1,9 @@
 const node = `
 <div id="com" testa="testa">
-    <input ref="input" type="text" id="com-input" v-model="ivalue" />
+    <input ref="input" type="text" id="com-input" w-model="ivalue" />
     <p id="com-show">{ivalue}</p>
-    <input type="button" value="clear" id="com-button" vclick="onClickClear"/>
-    <input type="button" value="show" id="com-button" vclick="onClickShow"/>
+    <input type="button" value="clear" id="com-button" w-click="onClickClear"/>
+    <input type="button" value="show" id="com-button" w-click="onClickShow"/>
 </div>
 `;
 

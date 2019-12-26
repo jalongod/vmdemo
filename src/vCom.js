@@ -17,7 +17,7 @@ class VCom {
     addDomListener(vDom){
         if (vDom.type === "input"){
             vDom.dom.addEventListener("input",(e)=>{
-                let vkey = vDom.props["v-model"];
+                let vkey = vDom.props["w-model"];
                 if (vkey){
                     this[vkey] = e.target.value;
                 }
@@ -27,7 +27,7 @@ class VCom {
 
     /**
      * 监听data变化
-     * v-model
+     * w-model
      * @param key
      * @param dom
      * @param cb
@@ -75,7 +75,7 @@ class VCom {
     toRealDom(vDom) {
         let dom = document.createElement(vDom.type);
         for (let i in vDom.props) {
-            if (i === "v-model"){
+            if (i === "w-model"){
                 let objstr = vDom.props[i]
                 dom.setAttribute("value",this[objstr]);
                 this.addDataListener(objstr,dom,(dom1,val)=>{
@@ -84,7 +84,7 @@ class VCom {
                 });
                 continue;
             }
-            if (i ==="vclick"){
+            if (i ==="w-click"){
                 let handler = this[vDom.props[i]].bind(this);
                 dom.addEventListener("click", handler);
                 continue
