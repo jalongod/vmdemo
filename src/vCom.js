@@ -7,7 +7,6 @@ class VCom {
         this.initMethods(com.methods);
         this.vDom = this.domStrToVDom(com.nsrc);
         this.dom = this.toRealDom(this.vDom);
-
     }
     /**
      * 监听dom的交互事件
