@@ -1,23 +1,25 @@
-
-
 class VCom {
-    constructor(com) {
+    //构造函数
+    constructor(parentNodeId, com) {
+        this.parentDom = document.getElementById(parentNodeId);
         this.$ref = {}
         this.initData(com.data());
         this.initMethods(com.methods);
-        this.vDom = this.domStrToVDom(com.nsrc);
-        this.dom = this.toRealDom(this.vDom);
+        this.vDom = this._domStrToVDom(com.nsrc);
+        this.recursiveVDom();
+
     }
+
     /**
      * 监听dom的交互事件
      * 例如input控件的input事件
      * @param vDom
      */
-    addDomListener(vDom){
-        if (vDom.type === "input"){
-            vDom.dom.addEventListener("input",(e)=>{
+    addDomListener(vDom) {
+        if (vDom.type === "input") {
+            vDom.dom.addEventListener("input", (e) => {
                 let vkey = vDom.props["w-model"];
-                if (vkey){
+                if (vkey) {
                     this[vkey] = e.target.value;
                 }
             })
@@ -27,127 +29,177 @@ class VCom {
     /**
      * 监听data变化
      * w-model
-     * @param key
-     * @param dom
-     * @param cb
+     * @param key 监听的key值
+     * @param cb  回调
      */
-    addDataListener(key,dom,cb){
+    addDataListener(key, cb) {
         let that = this;
-        if (!that["_"+key])
-            that["_"+key]="";
-        if (!that["key_listeners"])
-            that["key_listeners"]=[]
-        that["key_listeners"].push(cb);
-        Object.defineProperty(that,key,{
-            get:function() {
-                return that["_"+key];
+        if (!that["_" + key])
+            that["_" + key] = "";
+        if (!this.dataListeners)
+            this.dataListeners = {}; // key :[cb,cb ...]
+        if (!this.dataListeners[key])
+            this.dataListeners[key] = [];
+        this.dataListeners[key].push(cb);
+        Object.defineProperty(that, key, {
+            get: function () {
+                return that["_" + key];
             },
-            set:function(val){
-                if (that["_" + key]!==val){
-                    that["_" + key]=val;
-                    that[key]=val;
-                    setTimeout(()=>{
-                        for (let i in that["key_listeners"]){
-                            that["key_listeners"][i](dom,val);
+            set: function (val) {
+                if (that["_" + key] !== val) {
+                    that["_" + key] = val;
+                    that[key] = val;
+                    setTimeout(() => {
+                        for (let i in that.dataListeners[key]) {
+                            that.dataListeners[key][i](val);
                         }
-                    },0);
+                    }, 0);
                 }
             }
         })
     }
 
     //组装data
-    initData(data){
-        if (!data || data.length<=0)return;
+    initData(data) {
+        if (!data || data.length <= 0) return;
         for (let i in data) {
-            this[i]=data[i];
+            this[i] = data[i];
         }
     }
+
     //组装methods
-    initMethods(methods){
-        if (!methods || methods.length<=0)return;
+    initMethods(methods) {
+        if (!methods || methods.length <= 0) return;
         for (let i in methods) {
-            this[i]=methods[i];
+            this[i] = methods[i];
         }
     }
+
     //根据虚拟dom生成真实dom
-    toRealDom(vDom) {
+    vDomToDom(vDom) {
+        if (!this._wifOfVDom(vDom)) {
+            //从dom树中删除节点
+            if (vDom.dom) {
+                vDom.dom.parentNode.removeChild(vDom.dom);
+                delete (vDom.dom);
+            }
+            return;
+        }
+        //创建节点，并添加到dom树,如果dom树中已存在，do nothing
+        if (vDom.dom) return;
         let dom = document.createElement(vDom.type);
         for (let i in vDom.props) {
-            if (i === "w-model"){
+            if (i === "w-model") {
                 let objstr = vDom.props[i]
-                dom.setAttribute("value",this[objstr]);
-                this.addDataListener(objstr,dom,(dom1,val)=>{
-                    // dom.setAttribute("value",val);
+                dom.setAttribute("value", this[objstr]);
+                this.addDataListener(objstr, (val) => {
                     dom.value = val;
                 });
                 continue;
             }
-            if (i ==="w-click"){
+            if (i === "w-click") {
                 let handler = this[vDom.props[i]].bind(this);
                 dom.addEventListener("click", handler);
-                continue
+                continue;
             }
-            if (i === "ref"){
+            if (i === "ref") {
                 this.$ref[vDom.props[i]] = dom;
-                continue
+                continue;
             }
-            dom.setAttribute(i,vDom.props[i],)
+            if (i === "w-if") {
+                if (!this[vDom.props["w-if"]]) {
+                    continue;
+                }
+            }
+            dom.setAttribute(i, vDom.props[i],)
         }
-        if (vDom.hasOwnProperty("innerValue")){
+        if (vDom.hasOwnProperty("innerValue")) {
             dom.innerHTML = vDom["innerValue"];
         }
-        if (vDom.hasOwnProperty("innerObj")){
+        if (vDom.hasOwnProperty("innerObj")) {
             let objstr = vDom["innerObj"]
             dom.innerHTML = this[objstr];
-            this.addDataListener(objstr,dom,(dom1,val)=>{
+            this.addDataListener(objstr, (val) => {
                 dom.innerHTML = val;
             });
         }
-
-        for (let i in vDom.children) {
-            dom.appendChild(this.toRealDom(vDom.children[i]))
-        }
-        vDom.dom=dom;
+        vDom.dom = dom;
         this.addDomListener(vDom);
-        return dom;
+        // 在父节点中添加或删除
+        if (vDom.parent && vDom.parent.dom) {
+            vDom.parent.dom.append(vDom.dom);
+        } else {
+            // 根节点
+            this.parentDom && this.parentDom.appendChild(this.vDom.dom);
+        }
+
+    }
+
+    //递归虚拟dom
+    recursiveVDom(vDom) {
+        if (!vDom) vDom = this.vDom;
+        this.vDomToDom(vDom);
+        //递归遍历子节点
+        for (let i in vDom.children) {
+            let child = vDom.children[i];
+            this.recursiveVDom(child)
+        }
+    }
+
+
+    /**
+     * 检查是否需要创建dom
+     * @param vDom
+     * @returns {boolean|*}
+     */
+    _wifOfVDom(vDom) {
+        if (this.hasOwnProperty(vDom.props["w-if"])) {
+            // add listener
+            this.addDataListener(vDom.props["w-if"], (val) => {
+                this.recursiveVDom(vDom)
+            });
+            return this[vDom.props["w-if"]];
+        }
+        return true;
+
     }
 
     //将数据转成json格式
-    domStrToVDom(str){
+    _domStrToVDom(str) {
         if (!str) return "";
-        let xmlDoc=(new DOMParser()).parseFromString(str,"application/xml");
-        return this._domObjToVDom(xmlDoc.documentElement);
+        let xmlDoc = (new DOMParser()).parseFromString(str, "application/xml");
+        return this._domObjToVDom(null, xmlDoc.documentElement);
     }
-    _domObjToVDom(dom){
-        if (!dom)return null;
+
+    _domObjToVDom(parent, dom) {
+        if (!dom) return null;
         let obj = {}
-        obj.type=dom.nodeName;
+        obj.parent = parent;
+        obj.type = dom.nodeName;
         obj.nodeType = dom.nodeType;
-        if(dom.hasAttributes){
-            let props={};
-            for (let i = 0; i<dom.attributes.length; i++){
+        if (dom.hasAttributes) {
+            let props = {};
+            for (let i = 0; i < dom.attributes.length; i++) {
                 let att = dom.attributes.item(i);
-                props[att.nodeName]=att.nodeValue;
+                props[att.nodeName] = att.nodeValue;
             }
-            obj.props=props;
+            obj.props = props;
         }
-        if (dom.childNodes&&dom.childNodes.length>0){
-            let children=[];
-            for (let i = 0; i<dom.childNodes.length; i++){
+        if (dom.childNodes && dom.childNodes.length > 0) {
+            let children = [];
+            for (let i = 0; i < dom.childNodes.length; i++) {
                 let child = dom.childNodes.item(i);
-                if (child.nodeType ===3 ){
-                    if (child.nodeValue.indexOf("{")===-1)
-                    {
+                if (child.nodeType === 3) {
+                    if (child.nodeValue.indexOf("{") === -1) {
                         obj.innerValue = child.nodeValue;
-                    }else{
-                        obj.innerObj = child.nodeValue.replace("{","").replace("}","");
+                    } else {
+                        obj.innerObj = child.nodeValue.replace("{", "").replace("}", "");
                     }
                     continue;
                 }
-                children.push(this._domObjToVDom(child))
+                children.push(this._domObjToVDom(obj, child))
             }
-            obj.children=children;
+            obj.children = children;
         }
         return obj;
     }

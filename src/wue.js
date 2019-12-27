@@ -4,9 +4,7 @@ import VCom from "./vCom";
  */
 class Wue {
     constructor(parentNodeId,com) {
-        let vcom = new VCom(com);
-        this.parentDom = document.getElementById(parentNodeId);
-        this.parentDom.appendChild(vcom.dom);
+        new VCom(parentNodeId,com);
     }
 }
 
